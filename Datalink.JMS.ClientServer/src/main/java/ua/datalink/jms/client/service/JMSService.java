@@ -1,4 +1,4 @@
-package ua.datalink.jms.server.service;
+package ua.datalink.jms.client.service;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

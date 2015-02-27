@@ -1,4 +1,4 @@
-package ua.datalink.jms.server.entity;
+package ua.datalink.jms.client.entity;
 
 
 /**

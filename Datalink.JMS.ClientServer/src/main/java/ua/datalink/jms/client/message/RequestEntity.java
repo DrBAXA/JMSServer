@@ -1,6 +1,6 @@
-package ua.datalink.jms.server.message;
+package ua.datalink.jms.client.message;
 
-import ua.datalink.jms.server.entity.User;
+import ua.datalink.jms.client.entity.User;
 
 /**
  *

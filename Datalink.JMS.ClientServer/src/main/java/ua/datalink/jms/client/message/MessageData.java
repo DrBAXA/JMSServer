@@ -1,4 +1,4 @@
-package ua.datalink.jms.server.message;
+package ua.datalink.jms.client.message;
 
 public class MessageData {
     private String description;

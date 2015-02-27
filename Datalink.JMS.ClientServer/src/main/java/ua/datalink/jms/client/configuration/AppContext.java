@@ -1,4 +1,4 @@
-package ua.datalink.jms.server.configuration;
+package ua.datalink.jms.client.configuration;
 
 /**
  *

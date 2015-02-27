@@ -1,4 +1,4 @@
-package ua.datalink.jms.server.controller;
+package ua.datalink.jms.client.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -7,8 +7,8 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ua.datalink.jms.server.entity.User;
-import ua.datalink.jms.server.service.ProcessingService;
+import ua.datalink.jms.client.entity.User;
+import ua.datalink.jms.client.service.ProcessingService;
 
 /**
  *

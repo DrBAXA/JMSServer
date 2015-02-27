@@ -1,4 +1,4 @@
-package ua.datalink.jms.server.message;
+package ua.datalink.jms.client.message;
 
 /**
  * Created by DrBAX_000 on 25.02.2015.

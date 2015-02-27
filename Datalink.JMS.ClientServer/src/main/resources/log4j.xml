@@ -11,7 +11,7 @@
 </appender>
 
     <!-- Services logs -->
-    <logger name="ua.datalink.jms.server">
+    <logger name="ua.datalink.jms.client">
         <level value="info"/>
         <appender-ref ref="console"/>
     </logger>

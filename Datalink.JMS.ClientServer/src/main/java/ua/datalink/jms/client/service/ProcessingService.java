@@ -1,12 +1,12 @@
-package ua.datalink.jms.server.service;
+package ua.datalink.jms.client.service;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ua.datalink.jms.server.entity.User;
-import ua.datalink.jms.server.message.*;
+import ua.datalink.jms.client.entity.User;
+import ua.datalink.jms.client.message.*;
 
 import javax.jms.JMSException;
 import java.io.IOException;
