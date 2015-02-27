@@ -9,39 +9,36 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.jms.*;
 
-/**
- *
- */
 @Service
 public class JMSService {
 
-    @Value("${jms.usetransactions}")
-    private boolean transacted;
+    public static final String NO_RESPONSE_FROM_SERVER = "{\"result\" : \"PROCESSING_ERROR\", " +
+            "\"data\" : {\"description\" : \"Server didn't respond to request.\"}}";
+
+    public static final String BED_RESPONSE_FROM_SERVER = "{\"result\" : \"PROCESSING_ERROR\", " +
+            "\"data\" : {\"description\" : \"Server sent unsupported message type\"}}";
+
+    @Value("${jms.request.timeout}")
+    private int requestTimeout;
     @Value("${jms.request.destination.name}")
     private String requestQueueName;
-    @Value("${jms.response.destination.name}")
-    private String responseQueueName;
+
     private static final Logger logger = Logger.getLogger(JMSService.class);
 
     @Autowired
     private ConnectionFactory jmsConnectionFactory;
-
     private Connection connection;
-
-    public Session getSession() {
-        return session;
-    }
-
     private Session session;
     private Destination requestDestination;
-
-    public MessageProducer getProducer() {
-        return producer;
-    }
-
     private MessageProducer producer;
 
-    public String sendReceive(String request) throws JMSException {
+    /**
+     * Send request to server and receive response synchronously
+     * @param request serialized to JSON request object
+     * @return serialized to JSON response object or prepared JSON if server send bed response/not respond
+     * @throws JMSException
+     */
+    public String requestResponse(String request) throws JMSException {
         Destination tempDestination = session.createTemporaryQueue();
         MessageConsumer tempConsumer = session.createConsumer(tempDestination);
 
@@ -49,26 +46,24 @@ public class JMSService {
         message.setJMSCorrelationID("corId");
         message.setJMSReplyTo(tempDestination);
         producer.send(message);
-        Message response = tempConsumer.receive(1000);
+        Message response = tempConsumer.receive(requestTimeout);
         if(response == null){
-            return "{\"result\" : \"PROCESSING_ERROR\", \"data\" : {\"description\" : \"Server didn't respond to request.\"}}";
+            return NO_RESPONSE_FROM_SERVER;
         }
         if(response instanceof TextMessage){
             return ((TextMessage) response).getText();
         } else {
-            return "{\"result\" : \"PROCESSING_ERROR\", \"data\" : {\"description\" : \"Server sent unsupported message type\"}}";
+            return BED_RESPONSE_FROM_SERVER;
         }
     }
 
     @PostConstruct
-    public boolean start(){
+    private boolean start(){
         try {
             connection = jmsConnectionFactory.createConnection();
             connection.start();
-            session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
-
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             requestDestination = session.createQueue(requestQueueName);
-
             producer = session.createProducer(requestDestination);
             logger.info("Server started");
             return true;
@@ -80,7 +75,7 @@ public class JMSService {
     }
 
     @PreDestroy
-    public boolean stop(){
+    private boolean stop(){
         try {
             producer.close();
             session.close();
