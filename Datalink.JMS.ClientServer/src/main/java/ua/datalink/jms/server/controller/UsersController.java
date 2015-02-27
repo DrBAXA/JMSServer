@@ -1,6 +1,7 @@
 package ua.datalink.jms.server.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +32,8 @@ public class UsersController {
             modelMap.addAttribute("user", new User());
             modelMap.addAttribute("users", processingService.getAll());
         } catch (Exception e) {
-            modelMap.addAttribute("error", e.getMessage());
+            modelMap.addAttribute("result", e.getMessage());
+            modelMap.addAttribute("resultStatus", "red");
         }
         return "index";
     }
@@ -43,7 +45,8 @@ public class UsersController {
             modelMap.addAttribute("user", new User());
             modelMap.addAttribute("requestedUser", processingService.get(id));
         } catch (Exception e) {
-            modelMap.addAttribute("error", e.getMessage());
+            modelMap.addAttribute("result", e.getMessage());
+            modelMap.addAttribute("resultStatus", "red");
         }
         return "index";
     }
@@ -54,21 +57,20 @@ public class UsersController {
         try {
             modelMap.addAttribute("user", new User());
             modelMap.addAttribute("result", processingService.put(user));
+            modelMap.addAttribute("resultStatus", "green");
         } catch (Exception e) {
             modelMap.addAttribute("result", e.getMessage());
+            modelMap.addAttribute("resultStatus", "red");
         }
         return "index";
     }
 
-    @RequestMapping(value = "/users/{id}", method = RequestMethod.POST)
-    public String delete(@PathVariable("id") int id,
-                         ModelMap modelMap){
+    @RequestMapping(value = "/users/{id}", method = RequestMethod.DELETE)
+    public org.springframework.http.ResponseEntity<String> delete(@PathVariable("id") int id){
         try {
-            modelMap.addAttribute("user", new User());
-            modelMap.addAttribute("result", processingService.delete(id));
+            return new org.springframework.http.ResponseEntity<String>(processingService.delete(id), HttpStatus.OK);
         } catch (Exception e) {
-            modelMap.addAttribute("result", e.getMessage());
+            return new org.springframework.http.ResponseEntity<String>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return "index";
     }
 }

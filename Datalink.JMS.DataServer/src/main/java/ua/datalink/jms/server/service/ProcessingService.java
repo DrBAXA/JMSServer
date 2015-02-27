@@ -44,7 +44,6 @@ public class ProcessingService {
                 messageText = processObjectRequest(requestEntity);
             } catch (JsonParseException jpe) {
                 messageText = "Unsupported request format. " + jpe.getMessage();
-                TextMessage responseMessage = JMSService.getSession().createTextMessage();
             }
             TextMessage responseMessage = JMSService.getSession().createTextMessage();
             responseMessage.setText(messageText);

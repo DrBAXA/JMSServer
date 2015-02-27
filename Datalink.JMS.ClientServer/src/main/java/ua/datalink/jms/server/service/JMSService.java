@@ -50,10 +50,14 @@ public class JMSService {
         message.setJMSReplyTo(tempDestination);
         producer.send(message);
         Message response = tempConsumer.receive(1000);
+        if(response == null){
+            return "{\"result\" : \"PROCESSING_ERROR\", \"data\" : {\"description\" : \"Server didn't respond to request.\"}}";
+        }
         if(response instanceof TextMessage){
             return ((TextMessage) response).getText();
+        } else {
+            return "{\"result\" : \"PROCESSING_ERROR\", \"data\" : {\"description\" : \"Server sent unsupported message type\"}}";
         }
-        return "{\"result\" : \"PROCESSING_ERROR\", \"data\" : {\"description\" : \"Server sent unsupported message type\"}}";
     }
 
     @PostConstruct

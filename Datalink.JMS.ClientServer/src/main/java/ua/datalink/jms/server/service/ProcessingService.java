@@ -49,7 +49,7 @@ public class ProcessingService {
         RequestEntity request = RequestEntity.getPUTRequest(user);
         String response = jmsService.sendReceive(objectMapper.writeValueAsString(request));
         processResponse(response);
-        return "Data was added to database.";
+        return "User was added to database.";
     }
 
     public String delete(int id) throws IOException, JMSException, ProcessingErrorException, EntityNotFounException {
