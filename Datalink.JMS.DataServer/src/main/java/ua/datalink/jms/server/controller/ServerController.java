@@ -10,7 +10,7 @@ import ua.datalink.jms.server.service.JMSService;
  *
  */
 @Controller
-public class HelloController {
+public class ServerController {
 
     @Autowired
     JMSService server;
