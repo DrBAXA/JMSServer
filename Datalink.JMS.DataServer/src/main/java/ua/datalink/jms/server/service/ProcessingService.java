@@ -1,7 +1,5 @@
 package ua.datalink.jms.server.service;
 
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,63 +8,63 @@ import ua.datalink.jms.server.entity.User;
 import ua.datalink.jms.server.message.RequestEntity;
 import ua.datalink.jms.server.message.ResponseEntity;
 
-import javax.annotation.PostConstruct;
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.persistence.PersistenceException;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static ua.datalink.jms.server.util.StaticResources.PROCESSING_SERVICE_JNDI_NAME;
-
-/**
- *
- */
 @Service
 public class ProcessingService {
 
-    private static final Logger logger = Logger.getLogger(ProcessingService.class);
+    private  AtomicInteger getRequests = new AtomicInteger(0);
+    private  AtomicInteger getAllRequests = new AtomicInteger(0);
+    private  AtomicInteger putRequests = new AtomicInteger(0);
+    private  AtomicInteger deleteRequests = new AtomicInteger(0);
 
-    @Autowired
-    private JMSService JMSService;
+    public int getGetRequests() {
+        return getRequests.get();
+    }
+
+    public int getGetAllRequests() {
+        return getAllRequests.get();
+    }
+
+    public int getPutRequests() {
+        return putRequests.get();
+    }
+
+    public int getDeleteRequests() {
+        return deleteRequests.get();
+    }
+
     @Autowired
     private UserDAO userDAO;
 
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    public void process(TextMessage message) {
+    public String process(String message) {
+        String responseText = null;
         try {
-            String messageText = null;
-            try {
-                RequestEntity requestEntity = objectMapper.readValue(message.getText(), RequestEntity.class);
-                messageText = processObjectRequest(requestEntity);
-            } catch (JsonParseException jpe) {
-                messageText = "Unsupported request format. " + jpe.getMessage();
-            }
-            TextMessage responseMessage = JMSService.getSession().createTextMessage();
-            responseMessage.setText(messageText);
-            responseMessage.setJMSCorrelationID(message.getJMSCorrelationID());
-            JMSService.getProducer(message.getJMSReplyTo()).send(responseMessage);
-        }catch (JMSException | IOException ioe) {
-            logger.error(ioe.getMessage());
-            logger.debug(ioe.getMessage(), ioe);
+            RequestEntity requestEntity = objectMapper.readValue(message, RequestEntity.class);
+            responseText = processObjectRequest(requestEntity);
+        } catch (IOException jpe) {
+            responseText = "Unsupported request format. " + jpe.getMessage();
         }
+        return responseText;
     }
 
-    private String processObjectRequest(RequestEntity requestEntity) throws IOException, JMSException {
-            switch (requestEntity.getAction()) {
-                case PUT:
-                    return put(requestEntity.getData());
-                case GET:
-                    return get(requestEntity.getData().getId());
-                case GET_ALL:
-                    return getAll();
-                case DELETE:
-                    return delete(requestEntity.getData().getId());
-                default: throw new JMSException("Unsupported request type.");
-            }
+    private String processObjectRequest(RequestEntity requestEntity) throws IOException {
+        switch (requestEntity.getAction()) {
+            case PUT:
+                return put(requestEntity.getData());
+            case GET:
+                return get(requestEntity.getData().getId());
+            case GET_ALL:
+                return getAll();
+            case DELETE:
+                return delete(requestEntity.getData().getId());
+            default:
+                return null;
+        }
     }
 
     private String getAll() throws IOException {
@@ -77,6 +75,8 @@ public class ProcessingService {
             return objectMapper.writeValueAsString(responseEntity);
         } catch (PersistenceException pe) {
             return objectMapper.writeValueAsString(ResponseEntity.getERRORResponse(pe.getMessage()));
+        }finally {
+            getAllRequests.incrementAndGet();
         }
     }
 
@@ -90,17 +90,22 @@ public class ProcessingService {
             } else {
                 return objectMapper.writeValueAsString(ResponseEntity.getNOTFOUNDResponse(id));
             }
+
         } catch (PersistenceException pe) {
             return objectMapper.writeValueAsString(ResponseEntity.getERRORResponse(pe.getMessage()));
+        }finally {
+            getRequests.incrementAndGet();
         }
     }
 
-    private String put(User user) throws IOException, JMSException {
+    private String put(User user) throws IOException {
         try {
             userDAO.save(user);
             return objectMapper.writeValueAsString(ResponseEntity.getOKResponse());
         } catch (PersistenceException pe) {
             return objectMapper.writeValueAsString(ResponseEntity.getERRORResponse(pe.getMessage()));
+        }finally {
+            putRequests.incrementAndGet();
         }
     }
 
@@ -114,18 +119,8 @@ public class ProcessingService {
             }
         } catch (PersistenceException pe) {
             return objectMapper.writeValueAsString(ResponseEntity.getERRORResponse(pe.getMessage()));
-        }
-    }
-
-    @PostConstruct
-    private void init() {
-        objectMapper = new ObjectMapper();
-        try {
-            Context jndiContext = new InitialContext();
-            jndiContext.bind(PROCESSING_SERVICE_JNDI_NAME, this);
-        } catch (NamingException ne) {
-            logger.error(ne.getMessage());
-            logger.debug(ne.getMessage(), ne);
+        }finally {
+            deleteRequests.incrementAndGet();
         }
     }
 }

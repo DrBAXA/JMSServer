@@ -48,6 +48,8 @@ public class AppContext {
     String jmsUserName;
     @Value("${jms.user.password}")
     String jmsUserPassword;
+    @Value("${jms.connectionFactory.name}")
+    String connectionFactoryName;
 
     private Properties hibernateProperties(){
         Properties properties = new Properties();

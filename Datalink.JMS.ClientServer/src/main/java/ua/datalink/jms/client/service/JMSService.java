@@ -65,7 +65,7 @@ public class JMSService {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             requestDestination = session.createQueue(requestQueueName);
             producer = session.createProducer(requestDestination);
-            logger.info("Server started");
+            logger.info("Connected to JMSServer");
             return true;
         }catch (JMSException jmse){
             logger.error(jmse.getMessage());
@@ -80,7 +80,7 @@ public class JMSService {
             producer.close();
             session.close();
             connection.close();
-            logger.info("Server stopped.");
+            logger.info("Disconnected from JMSServer.");
             return true;
         }catch (JMSException jmse){
             logger.error(jmse.getMessage());

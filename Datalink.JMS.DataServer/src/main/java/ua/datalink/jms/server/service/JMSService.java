@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ua.datalink.jms.server.listener.JSONRequestMessageListener;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.jms.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -14,61 +17,73 @@ import javax.jms.*;
 @Service
 public class JMSService {
 
-    @Value("${jms.usetransactions}")
-    private boolean transacted;
+    private AtomicBoolean status = new AtomicBoolean(false);
+
+    private static final Logger logger = Logger.getLogger(JMSService.class);
+
     @Value("${jms.request.destination.name}")
     private String requestQueueName;
-    @Value("${jms.response.destination.name}")
-    private String responseQueueName;
-    private static final Logger logger = Logger.getLogger(JMSService.class);
 
     @Autowired
     private ConnectionFactory jmsConnectionFactory;
+    @Autowired
+    private JSONRequestMessageListener listener;
 
     private Connection connection;
+    private Session session;
+    private MessageConsumer consumer;
+    private MessageProducer producer;
 
     public Session getSession() {
         return session;
     }
 
-    private Session session;
-    private Destination requestDestination;
-    private MessageConsumer consumer;
-
-    public MessageProducer getProducer(Destination destination) throws JMSException {
-        return session.createProducer(destination);
+    public MessageProducer getProducer() throws JMSException {
+        return producer;
     }
 
-    public boolean start(){
+    public boolean getStatus() {
+        return status.get();
+    }
+
+    @PostConstruct
+    public void start(){
         try {
             connection = jmsConnectionFactory.createConnection();
             connection.start();
-            session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            requestDestination = session.createQueue(requestQueueName);
+            Destination requestDestination = session.createQueue(requestQueueName);
             consumer = session.createConsumer(requestDestination);
-            consumer.setMessageListener(new JSONRequestMessageListener());
+            consumer.setMessageListener(listener);
 
-            logger.info("Server started");
-            return true;
+            producer = session.createProducer(null);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+            logger.info("Connected to JMSServer");
+            status.set(true);
+
         }catch (JMSException jmse){
             logger.error(jmse.getMessage());
             logger.debug(jmse.getMessage(), jmse);
-            return false;
         }
     }
 
-    public boolean stop(){
+    @PreDestroy
+    public void stop(){
         try {
             consumer.close();
+            producer.close();
             session.close();
             connection.close();
-            logger.info("Server stopped.");
-            return true;
+            logger.info("Disconnected from JMSServer.");
+            status.set(false);
         }catch (JMSException jmse){
             logger.error(jmse.getMessage());
             logger.debug(jmse.getMessage(), jmse);
-            return false;
         }
     }
+
 }
+
+

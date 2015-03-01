@@ -2,17 +2,18 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <script src="<c:url value="/resources"/>/jQuery/jquery.min.js"></script>
+<c:url var="home_url" value="/"/>
 <html>
 
 <head>
     <script>
         function getId(){
-            var url ='http://' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/users/' + $('#userId').val();
+            var url =${home_url}'users/' + $('#userId').val();
             window.location.href = url;
         }
 
         function deleteId(){
-            var url ='/users/' + $('#delId').val();
+            var url =${home_url}'users/' + $('#delId').val();
             $.ajax({
                 url : url,
                 method : 'DELETE',
@@ -48,7 +49,7 @@
     <hr>
     <div>
         <p>Add user</p>
-        <form:form modelAttribute="user" method="POST" action="/users">
+        <form:form modelAttribute="user" method="POST" action="${home_url}users">
             <form:hidden path="id" required="required"/>
             <label for="name">Name</label><form:input path="name" required="required"/>
             <label for="surname">Surname</label><form:input path="surname" required="required"/>
@@ -63,7 +64,7 @@
     </form>
     <c:if test="${not empty requestedUser}">
         <table style="border: solid 1px blue; width:500px" rules="all">
-            <tr>
+            <tr style="background-color: lightgray">
                 <th>#</th>
                 <th>Name</th>
                 <th>Surname</th>
@@ -77,12 +78,12 @@
     </c:if>
     <hr>
     <p>Get all users</p>
-    <form action="/users" method="GET">
+    <form action="${home_url}users" method="GET">
         <button onclick="">Get all</button>
     </form>
     <c:if test="${not empty users}">
         <table style="border: solid 1px blue; width:500px" rules="all">
-            <tr>
+            <tr style="background-color: lightgray">
                 <th>#</th>
                 <th>Name</th>
                 <th>Surname</th>

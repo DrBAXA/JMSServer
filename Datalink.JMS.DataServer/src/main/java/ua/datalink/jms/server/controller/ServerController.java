@@ -2,36 +2,29 @@ package ua.datalink.jms.server.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import ua.datalink.jms.server.service.JMSService;
 
-/**
- *
- */
 @Controller
 public class ServerController {
 
     @Autowired
-    JMSService server;
+    private JMSService server;
 
     @RequestMapping("/")
-    public String hello(ModelMap modelMap){
-        modelMap.addAttribute("status", "false");
-        return "hello";
+    public String hello(){
+        return "index";
     }
 
     @RequestMapping("/start")
-    public String start(ModelMap modelMap){
-        modelMap.addAttribute("status", "true");
+    public String start(){
         server.start();
-        return "hello";
+        return "redirect:";
     }
 
     @RequestMapping("/stop")
-    public String stop(ModelMap modelMap){
-        modelMap.addAttribute("status", "false");
+    public String stop(){
         server.stop();
-        return "hello";
+        return "redirect:";
     }
 }
